@@ -11,6 +11,9 @@
     "docker:build": "docker build -t invoice-renderer .",
     "docker:run": "docker run -p 8080:8080 --env-file .env invoice-renderer"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
