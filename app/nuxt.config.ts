@@ -36,9 +36,10 @@ export default defineNuxtConfig({
     },
   },
 
+  // Keep type-checking in dev, skip in production builds (prevents vue-tsc patch crash on Railway)
   typescript: {
     strict: true,
-    typeCheck: true,
+    typeCheck: process.env.NODE_ENV !== "production",
   },
 
   compatibilityDate: "2024-01-01",
