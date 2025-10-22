@@ -7,7 +7,9 @@ WORKDIR /app
 
 # Copy package manifests and install all deps (including dev)
 COPY package*.json ./
-RUN npm install
+# Prevent Puppeteer from downloading Chromium during install in builder stage
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+RUN npm install --no-audit --no-fund
 
 # Copy source and tsconfig, then build
 COPY tsconfig.json ./
@@ -37,7 +39,7 @@ WORKDIR /app
 
 # Install only production dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
