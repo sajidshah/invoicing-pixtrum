@@ -1,5 +1,23 @@
-# Use Node.js 20 Alpine for smaller image size
-FROM node:20-alpine
+##########
+# Builder stage: compile TypeScript to dist
+##########
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Copy package manifests and install all deps (including dev)
+COPY package*.json ./
+RUN npm ci
+
+# Copy source and tsconfig, then build
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+##########
+# Runtime stage: minimal production image with Chromium
+##########
+FROM node:22-alpine
 
 # Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
@@ -12,25 +30,20 @@ RUN apk add --no-cache \
 
 # Set Puppeteer to use installed Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production
 
-# Create app directory
 WORKDIR /app
 
-# Copy package files
+# Install only production dependencies
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy built application
-COPY dist ./dist
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
 
 # Expose port
 EXPOSE 8080
-
-# Set environment to production
-ENV NODE_ENV=production
 
 # Run the application
 CMD ["node", "dist/server.js"]
