@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copy package manifests and install all deps (including dev)
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source and tsconfig, then build
 COPY tsconfig.json ./
@@ -37,7 +37,7 @@ WORKDIR /app
 
 # Install only production dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
