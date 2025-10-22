@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Invoices PDFs - accessible by owner or public
+    match /invoices/{invoiceId}.pdf {
+      // Allow authenticated users to upload (will be done by Cloud Run service with admin SDK)
+      allow write: if false; // Only backend can write
+      // Allow anyone to read (public PDFs) - adjust if you want private PDFs
+      allow read: if true;
+    }
+    
+    // User uploads (if you add this feature later)
+    match /uploads/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}

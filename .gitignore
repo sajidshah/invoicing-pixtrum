@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Nuxt
+.nuxt
+.output
+.env
+.env.*
+!.env.example
+services/invoice-renderer/.env
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# Build
+dist/
+build/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Service account keys
+*-service-account.json
+*.pem
+invoicing-pixtrum-firebase-adminsdk-fbsvc-a2bc0fa627.json
+.env
+*.env
+*firebase-adminsdk*.json
+*.env
+*firebase-adminsdk*.json
+app/.nuxt/
+app/node_modules/

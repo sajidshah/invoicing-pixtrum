@@ -1,0 +1,28 @@
+{
+  "name": "invoice-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PDF generation service for invoices",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "docker:build": "docker build -t invoice-renderer .",
+    "docker:run": "docker run -p 8080:8080 --env-file .env invoice-renderer"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0",
+    "puppeteer": "^21.6.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "invoicing-pixtrum",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Invoice management with Nuxt 3 + Firebase + PDF generation",
+  "workspaces": [
+    "app",
+    "services/invoice-renderer"
+  ],
+  "scripts": {
+    "dev:app": "npm run dev -w app",
+    "dev:service": "npm run dev -w invoice-renderer",
+    "build:app": "npm run build -w app",
+    "build:service": "npm run build -w invoice-renderer"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
