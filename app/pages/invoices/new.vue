@@ -15,6 +15,7 @@
         <InvoiceForm
           :clients="clients"
           :settings="settings"
+          :submitting="submitting"
           @submit="handleSubmit"
           @cancel="router.push('/invoices')"
         />
@@ -43,9 +44,11 @@ import { calculateInvoiceTotals } from "~/lib/utils";
 const { db } = useFirebase();
 const { user } = useAuth();
 const router = useRouter();
+const notification = useNotification();
 
 const clients = ref<Client[]>([]);
 const settings = ref<UserSettings | null>(null);
+const submitting = ref(false);
 
 // Load clients and settings
 onMounted(async () => {
@@ -92,6 +95,8 @@ onMounted(async () => {
 const handleSubmit = async (data: InvoiceFormData) => {
   if (!user.value || !settings.value) return;
 
+  submitting.value = true;
+
   try {
     const { subtotal, tax, total } = calculateInvoiceTotals(
       data.items,
@@ -114,10 +119,13 @@ const handleSubmit = async (data: InvoiceFormData) => {
       updatedAt: serverTimestamp(),
     });
 
+    notification.success("New invoice created successfully");
     router.push("/invoices");
   } catch (error) {
     console.error("Error creating invoice:", error);
-    alert("Failed to create invoice");
+    notification.error("Failed to create invoice");
+  } finally {
+    submitting.value = false;
   }
 };
 </script>

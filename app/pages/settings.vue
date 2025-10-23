@@ -236,6 +236,7 @@ import type { UserSettings } from "~/lib/types";
 
 const { db } = useFirebase();
 const { user } = useAuth();
+const notification = useNotification();
 
 const formData = reactive({
   invoiceStartNumber: 1,
@@ -309,13 +310,10 @@ const handleSubmit = async () => {
       updatedAt: serverTimestamp(),
     });
 
-    successMessage.value = "Settings saved successfully!";
-    setTimeout(() => {
-      successMessage.value = null;
-    }, 3000);
+    notification.success("Settings saved successfully!");
   } catch (err) {
     console.error("Error saving settings:", err);
-    error.value = "Failed to save settings";
+    notification.error("Failed to save settings");
   } finally {
     saving.value = false;
   }
