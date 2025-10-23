@@ -199,12 +199,8 @@
       </div>
 
       <div class="flex space-x-3 pt-4">
-        <button 
-          type="submit" 
-          class="btn-primary flex-1"
-          :disabled="submitting"
-        >
-          {{ submitting ? 'Creating Invoice...' : 'Create Invoice' }}
+        <button type="submit" class="btn-primary flex-1" :disabled="submitting">
+          {{ submitting ? "Creating Invoice..." : "Create Invoice" }}
         </button>
         <button type="button" @click="$emit('cancel')" class="btn-secondary">
           Cancel
