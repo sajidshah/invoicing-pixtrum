@@ -39,9 +39,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo("/");
   }
 
-  // Check onboarding status for authenticated users (temporarily disabled for testing)
-  // Uncomment when onboarding is ready to be enforced
-  /*
+  // Check onboarding status for authenticated users
   if (
     user.value &&
     to.path !== onboardingRoute &&
@@ -68,7 +66,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return navigateTo("/");
     }
   }
-  */
 
   console.log("[Middleware] Allowing navigation to", to.path);
 });
