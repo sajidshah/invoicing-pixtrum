@@ -8,10 +8,12 @@
     "services/invoice-renderer"
   ],
   "scripts": {
+    "dev": "npm run dev -w app",
     "dev:app": "npm run dev -w app",
     "dev:service": "npm run dev -w invoice-renderer",
     "build:app": "npm run build -w app",
-    "build:service": "npm run build -w invoice-renderer"
+    "build:service": "npm run build -w invoice-renderer",
+    "start": "npm run dev -w app"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
