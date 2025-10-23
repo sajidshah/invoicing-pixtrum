@@ -239,10 +239,6 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-definePageMeta({
-  middleware: "auth",
-});
-
 const { db } = useFirebase();
 const { user } = useAuth();
 const router = useRouter();
