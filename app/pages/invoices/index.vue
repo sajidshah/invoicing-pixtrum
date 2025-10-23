@@ -48,6 +48,7 @@ import type { Invoice } from "~/lib/types";
 const { db } = useFirebase();
 const { user, getAuthToken } = useAuth();
 const config = useRuntimeConfig();
+const notification = useNotification();
 
 const invoices = ref<Invoice[]>([]);
 const loading = ref(true);
@@ -116,10 +117,12 @@ const handleGeneratePdf = async (invoiceId: string | undefined) => {
       throw new Error("Failed to generate PDF");
     }
 
-    // Success - no alert needed, the PDF link will appear automatically
+    notification.success("PDF generated successfully");
   } catch (error) {
     console.error("Error generating PDF:", error);
-    alert("Failed to generate PDF. Make sure the PDF service is running.");
+    notification.error(
+      "Failed to generate PDF. Make sure the PDF service is running."
+    );
   } finally {
     generatingPdfId.value = null;
   }
@@ -134,9 +137,10 @@ const handleDeletePdf = async (invoiceId: string | undefined) => {
       pdfUrl: null,
       pdfGeneratedAt: null,
     });
+    notification.success("PDF deleted successfully");
   } catch (error) {
     console.error("Error deleting PDF:", error);
-    alert("Failed to delete PDF");
+    notification.error("Failed to delete PDF");
   }
 };
 
@@ -150,9 +154,10 @@ const handleUpdateStatus = async (
     await updateDoc(doc(db, "invoices", invoiceId), {
       status: newStatus,
     });
+    notification.success(`Status updated to ${newStatus}`);
   } catch (error) {
     console.error("Error updating status:", error);
-    alert("Failed to update status");
+    notification.error("Failed to update status");
   }
 };
 
@@ -162,9 +167,10 @@ const handleDeleteInvoice = async (invoiceId: string | undefined) => {
   try {
     // Delete the invoice document (PDF will be orphaned in storage but that's okay)
     await deleteDoc(doc(db, "invoices", invoiceId));
+    notification.success("Invoice deleted successfully");
   } catch (error) {
     console.error("Error deleting invoice:", error);
-    alert("Failed to delete invoice");
+    notification.error("Failed to delete invoice");
   }
 };
 </script>
