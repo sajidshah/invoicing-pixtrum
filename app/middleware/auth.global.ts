@@ -1,3 +1,12 @@
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+
 export default defineNuxtRouteMiddleware(async (to) => {
   // Only run on client side to avoid SSR hydration issues
   if (process.server) {
@@ -45,25 +54,65 @@ export default defineNuxtRouteMiddleware(async (to) => {
     to.path !== onboardingRoute &&
     !publicRoutes.includes(to.path)
   ) {
-    const { checkOnboardingStatus } = useOnboarding();
-    const { isComplete } = await checkOnboardingStatus();
+    try {
+      const { db } = useFirebase();
 
-    if (!isComplete) {
-      console.log(
-        "[Middleware] Onboarding incomplete, redirecting to /onboarding"
+      // Check if user has company name in settings
+      const settingsDoc = await getDoc(doc(db, "settings", user.value.uid));
+      const hasCompanyName =
+        settingsDoc.exists() && !!settingsDoc.data()?.companyName;
+
+      // Check if user has at least one client
+      const clientsQuery = query(
+        collection(db, "clients"),
+        where("ownedBy", "==", user.value.uid)
       );
-      return navigateTo(onboardingRoute);
+      const clientsSnapshot = await getDocs(clientsQuery);
+      const hasClient = clientsSnapshot.size > 0;
+
+      const isComplete = hasCompanyName && hasClient;
+
+      if (!isComplete) {
+        console.log(
+          "[Middleware] Onboarding incomplete, redirecting to /onboarding"
+        );
+        return navigateTo(onboardingRoute);
+      }
+    } catch (error) {
+      console.error("[Middleware] Error checking onboarding status:", error);
+      // On error, allow navigation to avoid blocking user
     }
   }
 
   // If user is on onboarding route but has already completed it, redirect to home
   if (user.value && to.path === onboardingRoute) {
-    const { checkOnboardingStatus } = useOnboarding();
-    const { isComplete } = await checkOnboardingStatus();
+    try {
+      const { db } = useFirebase();
 
-    if (isComplete) {
-      console.log("[Middleware] Onboarding already complete, redirecting to /");
-      return navigateTo("/");
+      // Check if user has company name in settings
+      const settingsDoc = await getDoc(doc(db, "settings", user.value.uid));
+      const hasCompanyName =
+        settingsDoc.exists() && !!settingsDoc.data()?.companyName;
+
+      // Check if user has at least one client
+      const clientsQuery = query(
+        collection(db, "clients"),
+        where("ownedBy", "==", user.value.uid)
+      );
+      const clientsSnapshot = await getDocs(clientsQuery);
+      const hasClient = clientsSnapshot.size > 0;
+
+      const isComplete = hasCompanyName && hasClient;
+
+      if (isComplete) {
+        console.log(
+          "[Middleware] Onboarding already complete, redirecting to /"
+        );
+        return navigateTo("/");
+      }
+    } catch (error) {
+      console.error("[Middleware] Error checking onboarding status:", error);
+      // On error, allow navigation to avoid blocking user
     }
   }
 
