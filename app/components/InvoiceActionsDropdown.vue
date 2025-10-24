@@ -99,6 +99,17 @@
             <span>View PDF</span>
           </button>
 
+          <!-- Send Email Option -->
+          <button
+            v-if="invoice.pdfUrl"
+            @mousedown.prevent="handleSendEmail"
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            role="menuitem"
+          >
+            <span>✉️</span>
+            <span>Send Email</span>
+          </button>
+
           <!-- Delete PDF with confirmation -->
           <div v-if="invoice.pdfUrl && !showDeletePdfConfirm">
             <button
@@ -181,6 +192,7 @@ const emit = defineEmits<{
   "delete-pdf": [];
   "update-status": [newStatus: string];
   "delete-invoice": [];
+  "send-email": [];
   "dropdown-open": [isOpen: boolean];
 }>();
 
@@ -321,6 +333,14 @@ const handleViewPdf = () => {
   showDeleteConfirm.value = false;
   showDeletePdfConfirm.value = false;
   emit("dropdown-open", false);
+};
+
+const handleSendEmail = () => {
+  isOpen.value = false;
+  showDeleteConfirm.value = false;
+  showDeletePdfConfirm.value = false;
+  emit("dropdown-open", false);
+  emit("send-email");
 };
 
 const handleDeletePdf = () => {

@@ -60,6 +60,25 @@
               >
                 {{ invoice.status }}
               </span>
+              <!-- Email Sent Indicator -->
+              <div
+                v-if="invoice.emailSentAt"
+                class="mt-1 flex items-center text-xs text-gray-500"
+              >
+                <svg
+                  class="w-3 h-3 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
+                  />
+                  <path
+                    d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
+                  />
+                </svg>
+                <span>Sent {{ formatEmailDate(invoice.emailSentAt) }}</span>
+              </div>
             </td>
             <td>
               <div
@@ -99,6 +118,7 @@
                   (newStatus) => $emit('update-status', invoice.id, newStatus)
                 "
                 @delete-invoice="$emit('delete-invoice', invoice.id)"
+                @send-email="$emit('send-email', invoice.id)"
                 @dropdown-open="
                   (isOpen) => handleDropdownOpen(invoice.id || '', isOpen)
                 "
@@ -128,6 +148,7 @@ defineEmits<{
   "delete-pdf": [invoiceId: string | undefined];
   "update-status": [invoiceId: string | undefined, newStatus: string];
   "delete-invoice": [invoiceId: string | undefined];
+  "send-email": [invoiceId: string | undefined];
 }>();
 
 const { db } = useFirebase();
@@ -158,5 +179,24 @@ onMounted(async () => {
 
 const getClientName = (clientId: string): string => {
   return clients.value.get(clientId) || "";
+};
+
+const formatEmailDate = (timestamp: any): string => {
+  if (!timestamp) return "";
+
+  // Handle Firestore Timestamp
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return formatDate(date);
 };
 </script>

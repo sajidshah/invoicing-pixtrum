@@ -92,6 +92,7 @@ import type { ClientFormData } from "~/lib/validators";
 
 const { db } = useFirebase();
 const { user } = useAuth();
+const notification = useNotification();
 
 const clients = ref<Client[]>([]);
 const loading = ref(true);
@@ -141,6 +142,7 @@ const handleClientSubmit = async (data: ClientFormData) => {
         ...data,
         updatedAt: serverTimestamp(),
       });
+      notification.success("Client updated successfully");
     } else {
       // Create new client
       await addDoc(collection(db, "clients"), {
@@ -149,11 +151,12 @@ const handleClientSubmit = async (data: ClientFormData) => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      notification.success("Client created successfully");
     }
     selectedClient.value = null;
   } catch (error) {
     console.error("Error saving client:", error);
-    alert("Failed to save client");
+    notification.error("Failed to save client");
   }
 };
 
@@ -167,9 +170,10 @@ const deleteClient = async (clientId?: string) => {
 
   try {
     await deleteDoc(doc(db, "clients", clientId));
+    notification.success("Client deleted successfully");
   } catch (error) {
     console.error("Error deleting client:", error);
-    alert("Failed to delete client");
+    notification.error("Failed to delete client");
   }
 };
 </script>

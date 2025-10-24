@@ -163,6 +163,96 @@
             </div>
           </div>
 
+          <!-- Gmail Integration Section -->
+          <div class="border-t pt-6">
+            <h3 class="text-lg font-semibold mb-4">Gmail Integration</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              Connect your Gmail account to send invoices directly via email
+            </p>
+
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div v-if="!settings?.gmailConnected" class="space-y-3">
+                <div class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-gray-400 mt-0.5 mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <div>
+                    <p class="text-sm text-gray-700 mb-2">
+                      Gmail is not connected. Connect your Gmail account to send
+                      invoices directly to your clients.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  @click="handleConnectGmail"
+                  :disabled="connectingGmail"
+                  class="btn-primary"
+                >
+                  <svg
+                    v-if="!connectingGmail"
+                    class="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"
+                    />
+                  </svg>
+                  {{ connectingGmail ? "Connecting..." : "Connect Gmail" }}
+                </button>
+              </div>
+
+              <div v-else class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg
+                      class="w-5 h-5 text-green-500 mr-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">
+                        Gmail Connected
+                      </p>
+                      <p class="text-xs text-gray-500">
+                        {{ settings?.gmailEmail }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    @click="handleDisconnectGmail"
+                    :disabled="disconnectingGmail"
+                    class="text-sm text-red-600 hover:text-red-700 font-medium"
+                  >
+                    {{ disconnectingGmail ? "Disconnecting..." : "Disconnect" }}
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500">
+                  You can now send invoices directly via email using the "Send
+                  Email" button on each invoice.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Invoice Customization Section -->
           <div class="border-t pt-6">
             <h3 class="text-lg font-semibold mb-4">Invoice Customization</h3>
@@ -236,6 +326,8 @@ import type { UserSettings } from "~/lib/types";
 
 const { db } = useFirebase();
 const { user } = useAuth();
+const notification = useNotification();
+const { connectGmail, disconnectGmail } = useGmail();
 
 const formData = reactive({
   invoiceStartNumber: 1,
@@ -255,27 +347,41 @@ const loading = ref(true);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
+const settings = ref<UserSettings | null>(null);
+const connectingGmail = ref(false);
+const disconnectingGmail = ref(false);
 
 // Load settings
 onMounted(async () => {
   if (!user.value) return;
 
+  // Check for Gmail OAuth callback status
+  const route = useRoute();
+  const isGmailCallback =
+    route.query.gmail === "connected" || route.query.gmail === "error";
+
+  if (route.query.gmail === "connected") {
+    notification.success("Gmail connected successfully!");
+  } else if (route.query.gmail === "error") {
+    notification.error("Failed to connect Gmail. Please try again.");
+  }
+
   try {
     const settingsDoc = await getDoc(doc(db, "settings", user.value.uid));
 
     if (settingsDoc.exists()) {
-      const settings = settingsDoc.data() as UserSettings;
-      formData.invoiceStartNumber = settings.invoiceStartNumber;
-      formData.defaultTaxRate = settings.defaultTaxRate;
-      formData.defaultCurrency = settings.defaultCurrency;
-      formData.companyName = settings.companyName || "";
-      formData.companyAddress = settings.companyAddress || "";
-      formData.companyEmail = settings.companyEmail || "";
-      formData.companyPhone = settings.companyPhone || "";
-      formData.bankDetails = settings.bankDetails || "";
-      formData.quantityLabel = settings.quantityLabel || "";
-      formData.unitPriceLabel = settings.unitPriceLabel || "";
-      formData.footerNote = settings.footerNote || "";
+      settings.value = settingsDoc.data() as UserSettings;
+      formData.invoiceStartNumber = settings.value.invoiceStartNumber;
+      formData.defaultTaxRate = settings.value.defaultTaxRate;
+      formData.defaultCurrency = settings.value.defaultCurrency;
+      formData.companyName = settings.value.companyName || "";
+      formData.companyAddress = settings.value.companyAddress || "";
+      formData.companyEmail = settings.value.companyEmail || "";
+      formData.companyPhone = settings.value.companyPhone || "";
+      formData.bankDetails = settings.value.bankDetails || "";
+      formData.quantityLabel = settings.value.quantityLabel || "";
+      formData.unitPriceLabel = settings.value.unitPriceLabel || "";
+      formData.footerNote = settings.value.footerNote || "";
     }
   } catch (err) {
     console.error("Error loading settings:", err);
@@ -283,7 +389,40 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+
+  // Remove query param from URL after loading settings
+  if (isGmailCallback) {
+    navigateTo("/settings", { replace: true });
+  }
 });
+
+const handleConnectGmail = async () => {
+  connectingGmail.value = true;
+  const result = await connectGmail();
+  connectingGmail.value = false;
+
+  if (result.success && user.value) {
+    // Reload settings to update UI
+    const settingsDoc = await getDoc(doc(db, "settings", user.value.uid));
+    if (settingsDoc.exists()) {
+      settings.value = settingsDoc.data() as UserSettings;
+    }
+  }
+};
+
+const handleDisconnectGmail = async () => {
+  disconnectingGmail.value = true;
+  const result = await disconnectGmail();
+  disconnectingGmail.value = false;
+
+  if (result.success) {
+    // Update local settings
+    if (settings.value) {
+      settings.value.gmailConnected = false;
+      settings.value.gmailEmail = undefined;
+    }
+  }
+};
 
 const handleSubmit = async () => {
   if (!user.value) return;
@@ -309,13 +448,10 @@ const handleSubmit = async () => {
       updatedAt: serverTimestamp(),
     });
 
-    successMessage.value = "Settings saved successfully!";
-    setTimeout(() => {
-      successMessage.value = null;
-    }, 3000);
+    notification.success("Settings saved successfully!");
   } catch (err) {
     console.error("Error saving settings:", err);
-    error.value = "Failed to save settings";
+    notification.error("Failed to save settings");
   } finally {
     saving.value = false;
   }

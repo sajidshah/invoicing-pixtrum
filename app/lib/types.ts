@@ -20,6 +20,9 @@ export interface UserSettings {
   quantityLabel?: string;
   unitPriceLabel?: string;
   footerNote?: string;
+  gmailConnected?: boolean;
+  gmailEmail?: string;
+  gmailRefreshToken?: string;
   updatedAt: Timestamp;
 }
 
@@ -58,6 +61,8 @@ export interface Invoice {
   currency: string;
   status: InvoiceStatus;
   pdfUrl?: string;
+  emailSentAt?: Timestamp;
+  emailSentTo?: string;
   createdAt: Timestamp;
 }
 

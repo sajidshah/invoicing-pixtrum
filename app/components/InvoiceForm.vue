@@ -199,7 +199,9 @@
       </div>
 
       <div class="flex space-x-3 pt-4">
-        <button type="submit" class="btn-primary flex-1">Create Invoice</button>
+        <button type="submit" class="btn-primary flex-1" :disabled="submitting">
+          {{ submitting ? "Creating Invoice..." : "Create Invoice" }}
+        </button>
         <button type="button" @click="$emit('cancel')" class="btn-secondary">
           Cancel
         </button>
@@ -216,6 +218,7 @@ import { calculateInvoiceTotals, formatCurrency } from "~/lib/utils";
 interface Props {
   clients: Client[];
   settings?: UserSettings | null;
+  submitting?: boolean;
 }
 
 const props = defineProps<Props>();
