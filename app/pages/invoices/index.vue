@@ -25,9 +25,19 @@
           @delete-pdf="handleDeletePdf"
           @update-status="handleUpdateStatus"
           @delete-invoice="handleDeleteInvoice"
+          @send-email="handleSendEmail"
         />
       </div>
     </div>
+
+    <!-- Send Email Modal -->
+    <SendEmailModal
+      v-if="selectedInvoice"
+      :is-open="emailModalOpen"
+      :invoice="selectedInvoice"
+      @close="emailModalOpen = false"
+      @sent="handleEmailSent"
+    />
   </div>
 </template>
 
@@ -53,6 +63,8 @@ const notification = useNotification();
 const invoices = ref<Invoice[]>([]);
 const loading = ref(true);
 const generatingPdfId = ref<string | null>(null);
+const emailModalOpen = ref(false);
+const selectedInvoice = ref<Invoice | null>(null);
 
 // Real-time listener for invoices
 let unsubscribe: Unsubscribe | null = null;
@@ -172,5 +184,20 @@ const handleDeleteInvoice = async (invoiceId: string | undefined) => {
     console.error("Error deleting invoice:", error);
     notification.error("Failed to delete invoice");
   }
+};
+
+const handleSendEmail = (invoiceId: string | undefined) => {
+  if (!invoiceId) return;
+
+  const invoice = invoices.value.find((inv) => inv.id === invoiceId);
+  if (!invoice) return;
+
+  selectedInvoice.value = invoice;
+  emailModalOpen.value = true;
+};
+
+const handleEmailSent = () => {
+  // Email sent notification is handled by useGmail composable
+  // Just close the modal - the composable already shows success toast
 };
 </script>
