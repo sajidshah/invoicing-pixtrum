@@ -74,12 +74,14 @@
               required
               class="input"
             >
-              <option value="USD">USD - US Dollar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="GBP">GBP - British Pound</option>
-              <option value="CAD">CAD - Canadian Dollar</option>
-              <option value="AUD">AUD - Australian Dollar</option>
-              <option value="INR">INR - Indian Rupee</option>
+              <option value="USD">USD - US Dollar ($)</option>
+              <option value="EUR">EUR - Euro (€)</option>
+              <option value="GBP">GBP - British Pound (£)</option>
+              <option value="CAD">CAD - Canadian Dollar ($)</option>
+              <option value="AUD">AUD - Australian Dollar ($)</option>
+              <option value="SAR">SAR - Saudi Riyal (﷼)</option>
+              <option value="AED">AED - UAE Dirham (د.إ)</option>
+              <option value="INR">INR - Indian Rupee (₹)</option>
             </select>
           </div>
 
