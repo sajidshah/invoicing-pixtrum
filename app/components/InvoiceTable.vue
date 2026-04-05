@@ -117,6 +117,7 @@
                 @update-status="
                   (newStatus) => $emit('update-status', invoice.id, newStatus)
                 "
+                @edit-invoice="$emit('edit-invoice', invoice.id)"
                 @delete-invoice="$emit('delete-invoice', invoice.id)"
                 @send-email="$emit('send-email', invoice.id)"
                 @dropdown-open="
@@ -147,6 +148,7 @@ defineEmits<{
   "generate-pdf": [invoiceId: string | undefined];
   "delete-pdf": [invoiceId: string | undefined];
   "update-status": [invoiceId: string | undefined, newStatus: string];
+  "edit-invoice": [invoiceId: string | undefined];
   "delete-invoice": [invoiceId: string | undefined];
   "send-email": [invoiceId: string | undefined];
 }>();

@@ -24,6 +24,7 @@
           @generate-pdf="handleGeneratePdf"
           @delete-pdf="handleDeletePdf"
           @update-status="handleUpdateStatus"
+          @edit-invoice="handleEditInvoice"
           @delete-invoice="handleDeleteInvoice"
           @send-email="handleSendEmail"
         />
@@ -184,6 +185,11 @@ const handleDeleteInvoice = async (invoiceId: string | undefined) => {
     console.error("Error deleting invoice:", error);
     notification.error("Failed to delete invoice");
   }
+};
+
+const handleEditInvoice = (invoiceId: string | undefined) => {
+  if (!invoiceId) return;
+  navigateTo(`/invoices/${invoiceId}`);
 };
 
 const handleSendEmail = (invoiceId: string | undefined) => {

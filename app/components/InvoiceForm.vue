@@ -200,7 +200,7 @@
 
       <div class="flex space-x-3 pt-4">
         <button type="submit" class="btn-primary flex-1" :disabled="submitting">
-          {{ submitting ? "Creating Invoice..." : "Create Invoice" }}
+          {{ submitting ? submittingLabel : submitLabel }}
         </button>
         <button type="button" @click="$emit('cancel')" class="btn-secondary">
           Cancel
@@ -219,9 +219,15 @@ interface Props {
   clients: Client[];
   settings?: UserSettings | null;
   submitting?: boolean;
+  mode?: "create" | "edit";
+  initialData?: InvoiceFormData | null;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  submitting: false,
+  mode: "create",
+  initialData: null,
+});
 const emit = defineEmits<{
   submit: [data: InvoiceFormData];
   cancel: [];
@@ -230,30 +236,45 @@ const emit = defineEmits<{
 // Get today's date in YYYY-MM-DD format
 const today = new Date().toISOString().split("T")[0];
 
-// Calculate next invoice number from settings
-const nextInvoiceNumber = computed(() => {
-  if (props.settings) {
-    return props.settings.invoiceStartNumber.toString();
-  }
-  return "1";
-});
-
 const formData = reactive<InvoiceFormData>({
   clientId: "",
-  number: nextInvoiceNumber.value,
+  number: "",
   issueDate: today,
   dueDate: today,
   items: [{ description: "", quantity: 1, unitPrice: 0 }],
-  tax: props.settings?.defaultTaxRate ?? 0,
-  currency: props.settings?.defaultCurrency ?? "USD",
+  tax: 0,
+  currency: "USD",
   status: "draft",
 });
+
+const applyInvoiceData = (data: InvoiceFormData) => {
+  formData.clientId = data.clientId;
+  formData.number = data.number;
+  formData.issueDate = data.issueDate;
+  formData.dueDate = data.dueDate;
+  formData.items = data.items.length
+    ? data.items.map((item) => ({ ...item }))
+    : [{ description: "", quantity: 1, unitPrice: 0 }];
+  formData.tax = data.tax;
+  formData.currency = data.currency;
+  formData.status = data.status;
+};
+
+watch(
+  () => props.initialData,
+  (data) => {
+    if (data) {
+      applyInvoiceData(data);
+    }
+  },
+  { immediate: true }
+);
 
 // Update invoice number and defaults when settings change
 watch(
   () => props.settings,
   (newSettings) => {
-    if (newSettings) {
+    if (newSettings && props.mode === "create" && !props.initialData) {
       formData.number = newSettings.invoiceStartNumber.toString();
       formData.tax = newSettings.defaultTaxRate;
       formData.currency = newSettings.defaultCurrency;
@@ -266,6 +287,13 @@ const error = ref<string | null>(null);
 
 const totals = computed(() =>
   calculateInvoiceTotals(formData.items, formData.tax)
+);
+
+const submitLabel = computed(() =>
+  props.mode === "edit" ? "Update Invoice" : "Create Invoice"
+);
+const submittingLabel = computed(() =>
+  props.mode === "edit" ? "Updating Invoice..." : "Creating Invoice..."
 );
 
 const addItem = () => {

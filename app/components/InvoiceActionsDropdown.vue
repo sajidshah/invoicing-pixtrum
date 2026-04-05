@@ -79,6 +79,16 @@
 
           <div class="border-t border-gray-100"></div>
 
+          <!-- Edit Invoice -->
+          <button
+            @mousedown.prevent="handleEditInvoice"
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            role="menuitem"
+          >
+            <span>✏️</span>
+            <span>Edit Invoice</span>
+          </button>
+
           <!-- PDF Options -->
           <button
             v-if="!invoice.pdfUrl"
@@ -193,6 +203,7 @@ const emit = defineEmits<{
   "update-status": [newStatus: string];
   "delete-invoice": [];
   "send-email": [];
+  "edit-invoice": [];
   "dropdown-open": [isOpen: boolean];
 }>();
 
@@ -341,6 +352,14 @@ const handleSendEmail = () => {
   showDeletePdfConfirm.value = false;
   emit("dropdown-open", false);
   emit("send-email");
+};
+
+const handleEditInvoice = () => {
+  isOpen.value = false;
+  showDeleteConfirm.value = false;
+  showDeletePdfConfirm.value = false;
+  emit("dropdown-open", false);
+  emit("edit-invoice");
 };
 
 const handleDeletePdf = () => {
