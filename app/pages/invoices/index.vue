@@ -27,6 +27,8 @@
           @edit-invoice="handleEditInvoice"
           @delete-invoice="handleDeleteInvoice"
           @send-email="handleSendEmail"
+          @view-email-template="handleViewEmailTemplate"
+          @clone-invoice="handleOpenCloneModal"
         />
       </div>
     </div>
@@ -38,6 +40,21 @@
       :invoice="selectedInvoice"
       @close="emailModalOpen = false"
       @sent="handleEmailSent"
+    />
+
+    <InvoiceEmailTemplateModal
+      v-if="selectedTemplateInvoice"
+      :is-open="emailTemplateModalOpen"
+      :invoice="selectedTemplateInvoice"
+      @close="emailTemplateModalOpen = false"
+    />
+
+    <InvoiceCloneModal
+      v-if="selectedCloneInvoice"
+      :is-open="cloneModalOpen"
+      :invoice="selectedCloneInvoice"
+      @close="handleCloneModalClose"
+      @clone="handleCloneInvoice"
     />
   </div>
 </template>
@@ -52,9 +69,13 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  addDoc,
+  serverTimestamp,
   type Unsubscribe,
 } from "firebase/firestore";
-import type { Invoice } from "~/lib/types";
+import type { Invoice, UserSettings } from "~/lib/types";
+import { calculateInvoiceTotals } from "~/lib/utils";
 
 const { db } = useFirebase();
 const { user, getAuthToken } = useAuth();
@@ -66,6 +87,11 @@ const loading = ref(true);
 const generatingPdfId = ref<string | null>(null);
 const emailModalOpen = ref(false);
 const selectedInvoice = ref<Invoice | null>(null);
+const emailTemplateModalOpen = ref(false);
+const selectedTemplateInvoice = ref<Invoice | null>(null);
+const cloneModalOpen = ref(false);
+const selectedCloneInvoice = ref<Invoice | null>(null);
+const settings = ref<UserSettings | null>(null);
 
 // Real-time listener for invoices
 let unsubscribe: Unsubscribe | null = null;
@@ -74,6 +100,11 @@ onMounted(async () => {
     loading.value = false;
     return;
   }
+
+  const settingsDoc = await getDoc(doc(db, "settings", user.value.uid));
+  settings.value = settingsDoc.exists()
+    ? (settingsDoc.data() as UserSettings)
+    : null;
 
   const q = query(
     collection(db, "invoices"),
@@ -200,6 +231,89 @@ const handleSendEmail = (invoiceId: string | undefined) => {
 
   selectedInvoice.value = invoice;
   emailModalOpen.value = true;
+};
+
+const handleViewEmailTemplate = (invoiceId: string | undefined) => {
+  if (!invoiceId) return;
+
+  const invoice = invoices.value.find((inv) => inv.id === invoiceId);
+  if (!invoice) return;
+
+  selectedTemplateInvoice.value = invoice;
+  emailTemplateModalOpen.value = true;
+};
+
+const handleCloneModalClose = () => {
+  cloneModalOpen.value = false;
+  selectedCloneInvoice.value = null;
+};
+
+const handleOpenCloneModal = (invoiceId: string | undefined) => {
+  if (!invoiceId) return;
+
+  const invoice = invoices.value.find((inv) => inv.id === invoiceId);
+  if (!invoice) return;
+
+  selectedCloneInvoice.value = invoice;
+  cloneModalOpen.value = true;
+};
+
+const handleCloneInvoice = async (payload: {
+  dateStart: string;
+  dateEnd: string;
+  description: string;
+}) => {
+  if (!user.value || !selectedCloneInvoice.value) return;
+  if (!settings.value) {
+    notification.error("Settings not found. Please open Settings and try again.");
+    return;
+  }
+
+  cloneModalOpen.value = false;
+
+  try {
+    const source = selectedCloneInvoice.value;
+    const items = source.items.map((item, index) => {
+      if (index === 0) {
+        return { ...item, description: payload.description };
+      }
+      return { ...item };
+    });
+
+    const totals = calculateInvoiceTotals(items, source.tax);
+
+    await addDoc(collection(db, "invoices"), {
+      clientId: source.clientId,
+      number: settings.value.invoiceStartNumber.toString(),
+      issueDate: payload.dateEnd,
+      dueDate: payload.dateEnd,
+      items,
+      tax: source.tax,
+      currency: source.currency,
+      status: "draft",
+      ownedBy: user.value.uid,
+      subtotal: totals.subtotal,
+      total: totals.total,
+      createdAt: serverTimestamp(),
+    });
+
+    await updateDoc(doc(db, "settings", user.value.uid), {
+      invoiceStartNumber: settings.value.invoiceStartNumber + 1,
+      updatedAt: serverTimestamp(),
+    });
+
+    settings.value = {
+      ...settings.value,
+      invoiceStartNumber: settings.value.invoiceStartNumber + 1,
+    };
+
+    notification.success("Invoice cloned successfully");
+  } catch (error) {
+    console.error("Error cloning invoice:", error);
+    notification.error("Failed to clone invoice");
+  } finally {
+    selectedCloneInvoice.value = null;
+  }
 };
 
 const handleEmailSent = () => {

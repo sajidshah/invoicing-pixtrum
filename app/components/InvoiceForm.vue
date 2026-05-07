@@ -59,6 +59,7 @@
             type="date"
             required
             class="input"
+            @change="handleDueDateChange"
           />
         </div>
 
@@ -247,6 +248,8 @@ const formData = reactive<InvoiceFormData>({
   status: "draft",
 });
 
+const dueDateTouched = ref(false);
+
 const applyInvoiceData = (data: InvoiceFormData) => {
   formData.clientId = data.clientId;
   formData.number = data.number;
@@ -258,6 +261,7 @@ const applyInvoiceData = (data: InvoiceFormData) => {
   formData.tax = data.tax;
   formData.currency = data.currency;
   formData.status = data.status;
+  dueDateTouched.value = formData.dueDate !== formData.issueDate;
 };
 
 watch(
@@ -278,10 +282,25 @@ watch(
       formData.number = newSettings.invoiceStartNumber.toString();
       formData.tax = newSettings.defaultTaxRate;
       formData.currency = newSettings.defaultCurrency;
+      dueDateTouched.value = false;
+      formData.dueDate = formData.issueDate;
     }
   },
   { immediate: true }
 );
+
+watch(
+  () => formData.issueDate,
+  (nextDate) => {
+    if (!dueDateTouched.value) {
+      formData.dueDate = nextDate;
+    }
+  }
+);
+
+const handleDueDateChange = () => {
+  dueDateTouched.value = formData.dueDate !== formData.issueDate;
+};
 
 const error = ref<string | null>(null);
 

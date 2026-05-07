@@ -120,6 +120,8 @@
                 @edit-invoice="$emit('edit-invoice', invoice.id)"
                 @delete-invoice="$emit('delete-invoice', invoice.id)"
                 @send-email="$emit('send-email', invoice.id)"
+                @view-email-template="$emit('view-email-template', invoice.id)"
+                @clone-invoice="$emit('clone-invoice', invoice.id)"
                 @dropdown-open="
                   (isOpen) => handleDropdownOpen(invoice.id || '', isOpen)
                 "
@@ -151,6 +153,8 @@ defineEmits<{
   "edit-invoice": [invoiceId: string | undefined];
   "delete-invoice": [invoiceId: string | undefined];
   "send-email": [invoiceId: string | undefined];
+  "view-email-template": [invoiceId: string | undefined];
+  "clone-invoice": [invoiceId: string | undefined];
 }>();
 
 const { db } = useFirebase();

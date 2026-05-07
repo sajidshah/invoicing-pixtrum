@@ -89,6 +89,15 @@
             <span>Edit Invoice</span>
           </button>
 
+          <button
+            @mousedown.prevent="handleCloneInvoice"
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            role="menuitem"
+          >
+            <span>📌</span>
+            <span>Clone Invoice</span>
+          </button>
+
           <!-- PDF Options -->
           <button
             v-if="!invoice.pdfUrl"
@@ -118,6 +127,15 @@
           >
             <span>✉️</span>
             <span>Send Email</span>
+          </button>
+
+          <button
+            @mousedown.prevent="handleViewEmailTemplate"
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            role="menuitem"
+          >
+            <span>📝</span>
+            <span>Email Template</span>
           </button>
 
           <!-- Delete PDF with confirmation -->
@@ -203,6 +221,8 @@ const emit = defineEmits<{
   "update-status": [newStatus: string];
   "delete-invoice": [];
   "send-email": [];
+  "view-email-template": [];
+  "clone-invoice": [];
   "edit-invoice": [];
   "dropdown-open": [isOpen: boolean];
 }>();
@@ -354,12 +374,28 @@ const handleSendEmail = () => {
   emit("send-email");
 };
 
+const handleViewEmailTemplate = () => {
+  isOpen.value = false;
+  showDeleteConfirm.value = false;
+  showDeletePdfConfirm.value = false;
+  emit("dropdown-open", false);
+  emit("view-email-template");
+};
+
 const handleEditInvoice = () => {
   isOpen.value = false;
   showDeleteConfirm.value = false;
   showDeletePdfConfirm.value = false;
   emit("dropdown-open", false);
   emit("edit-invoice");
+};
+
+const handleCloneInvoice = () => {
+  isOpen.value = false;
+  showDeleteConfirm.value = false;
+  showDeletePdfConfirm.value = false;
+  emit("dropdown-open", false);
+  emit("clone-invoice");
 };
 
 const handleDeletePdf = () => {
